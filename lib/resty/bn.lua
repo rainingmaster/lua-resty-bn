@@ -1,5 +1,5 @@
 -- 使用openssl的bignum库，仅添加部分常用函数，基于十进制
--- 需要安装openssl-dev
+-- 需要安装openssl-dev，在resty下使用
 local ffi = require "ffi"
 local ffi_new = ffi.new
 local ffi_cast = ffi.cast
