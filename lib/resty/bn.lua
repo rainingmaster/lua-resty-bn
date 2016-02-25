@@ -43,16 +43,9 @@ int BN_dec2bn(BIGNUM **a, const char *str);
 int BN_hex2bn(BIGNUM **a, const char *str);
 char *BN_bn2dec(const BIGNUM *a);
 char *BN_bn2hex(const BIGNUM *a);
+
+void CRYPTO_free(void *ptr);
 ]]
-
-
-local function err()
-    local code = C.ERR_get_error()
-
-    local err = C.ERR_reason_error_string(code)
-
-    return nil, ffi_str(err)
-end
 
 local big_list = ffi_new("BIGNUM *[?]", 4)
 big_list[0] = C.BN_new()
@@ -60,149 +53,168 @@ big_list[1] = C.BN_new()
 big_list[2] = C.BN_new()
 big_list[3] = C.BN_new()
 
-function _M.new(self)
-    local ctx = C.BN_CTX_new()
-    if ffi_cast("void *", ctx) == nil then
-        return err()
-    end
-    ffi_gc(ctx, C.BN_CTX_free)
-    return setmetatable({ ctx = ctx }, mt)
-end
+local ctx = C.BN_CTX_new()
 
 --r = a + b
 -- bn:add(a, b)
-function _M.add(self, a, b)
+function _M.add(a, b)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(b))
     
     C.BN_add(big_list[2], big_list[0], big_list[1])
     local r = C.BN_bn2dec(big_list[2])
     local len = C.strlen(r)
-    return ffi.string(r, len)
+    local str = ffi.string(r, len)
+    C.CRYPTO_free(r)
+    return str
 end
 
 --r = a - b
 -- bn:sub(a, b)
-function _M.sub(self, a, b)
+function _M.sub(a, b)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(b))
     
     C.BN_sub(big_list[2], big_list[0], big_list[1])
     local r = C.BN_bn2dec(big_list[2])
     local len = C.strlen(r)
-    return ffi.string(r, len)
+    local str = ffi.string(r, len)
+    C.CRYPTO_free(r)
+    return str
 end
 
 --r = a * b
 -- bn:mul(a, b)
-function _M.mul(self, a, p)
+function _M.mul(a, p)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(p))
     
-    C.BN_mul(big_list[2], big_list[0], big_list[1], self.ctx)
+    C.BN_mul(big_list[2], big_list[0], big_list[1], ctx)
     local r = C.BN_bn2dec(big_list[2])
     local len = C.strlen(r)
-    return ffi.string(r, len)
+    local str = ffi.string(r, len)
+    C.CRYPTO_free(r)
+    return str
 end
 
 --d = a / b, r = a % b
 -- bn:div(a, b)
-function _M.div(self, a, b)
+function _M.div(a, b)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(b))
-    C.BN_div(big_list[3], big_list[2], big_list[0], big_list[1], self.ctx)
+    C.BN_div(big_list[3], big_list[2], big_list[0], big_list[1], ctx)
     local r = C.BN_bn2dec(big_list[2])
     local d = C.BN_bn2dec(big_list[3])
     local len_r = C.strlen(r)
     local len_d = C.strlen(d)
-    return ffi.string(d, len_d), ffi.string(r, len_r)
+    local str_r = ffi.string(r, len_r)
+    local str_d = ffi.string(d, len_d)
+    C.CRYPTO_free(r)
+    C.CRYPTO_free(d)
+    return str_d, str_r
 end
 
 -- r = a ^ p
 -- bn:pow(a, p)
-function _M.pow(self, a, p)
+function _M.pow(a, p)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(p))
     
-    C.BN_exp(big_list[2], big_list[0], big_list[1], self.ctx)
+    C.BN_exp(big_list[2], big_list[0], big_list[1], ctx)
     local r = C.BN_bn2dec(big_list[2])
     local len = C.strlen(r)
-    return ffi.string(r, len)
+    local str = ffi.string(r, len)
+    C.CRYPTO_free(r)
+    return str
 end
 
 -- r = a ^ 2
 -- bn:sqr(a)  性能优于pow
-function _M.sqr(self, a)
+function _M.sqr(a)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
-    C.BN_sqr(big_list[1], big_list[0], self.ctx)
+    C.BN_sqr(big_list[1], big_list[0], ctx)
     local r = C.BN_bn2dec(big_list[1])
     local len = C.strlen(r)
-    return ffi.string(r, len)
+    local str = ffi.string(r, len)
+    C.CRYPTO_free(r)
+    return str
 end
 
 --  大数十进制转十六进制
 -- bn:dec2hex(a)
-function _M.dec2hex(self, a)
+function _M.dec2hex(a)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
     local ret = C.BN_bn2hex(big_list[0])
     local len = C.strlen(ret)
-    return ffi.string(ret, len)
+    local str = ffi.string(ret, len)
+    C.CRYPTO_free(ret)
+    return str
 end
 
 --  大数十六进制转十进制
 -- bn:hex2dec(a)
-function _M.hex2dec(self, a)
+function _M.hex2dec(a)
     C.BN_hex2bn(big_list + 0, tostring(a))
 
     local ret = C.BN_bn2dec(big_list[0])
     local len = C.strlen(ret)
-    return ffi.string(ret, len)
+    local str = ffi.string(ret, len)
+    C.CRYPTO_free(ret)
+    return str
 end
 
 -- 将a中的第n位设置为1
 -- bn:set_bit(a, n)
-function _M.set_bit(self, a, n)
+function _M.set_bit(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
     C.BN_set_bit(big_list[0], n)
     local ret = C.BN_bn2dec(big_list[0])
     local len = C.strlen(ret)
-    return ffi.string(ret, len)
+    local str = ffi.string(ret, len)
+    C.CRYPTO_free(ret)
+    return str
 end
 
 -- 将a中的第n为设置为0
 -- bn:clear_bit(a, n)
-function _M.clear_bit(self, a, n)
+function _M.clear_bit(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
     C.BN_clear_bit(big_list[0], n)
     local ret = C.BN_bn2dec(big_list[0])
     local len = C.strlen(ret)
-    return ffi.string(ret, len)
+    local str = ffi.string(ret, len)
+    C.CRYPTO_free(ret)
+    return str
 end
 
 -- a左移n位，结果存于r
 -- bn:lshift(a, n)
-function _M.lshift(self, a, n)
+function _M.lshift(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
     C.BN_lshift(big_list[1], big_list[0], n)
     local ret = C.BN_bn2dec(big_list[1])
     local len = C.strlen(ret)
-    return ffi.string(ret, len)
+    local str = ffi.string(ret, len)
+    C.CRYPTO_free(ret)
+    return str
 end
 
 --  a右移n位，结果存于r
 -- bn:rshift(a, n)
-function _M.rshift(self, a, n)
+function _M.rshift(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
     C.BN_rshift(big_list[1], big_list[0], n)
     local ret = C.BN_bn2dec(big_list[1])
     local len = C.strlen(ret)
-    return ffi.string(ret, len)
+    local str = ffi.string(ret, len)
+    C.CRYPTO_free(ret)
+    return str
 end
 
 return _M
