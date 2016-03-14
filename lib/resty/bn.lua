@@ -56,7 +56,7 @@ big_list[3] = C.BN_new()
 local ctx = C.BN_CTX_new()
 
 --r = a + b
--- bn:add(a, b)
+-- bn.add(a, b)
 function _M.add(a, b)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(b))
@@ -70,7 +70,7 @@ function _M.add(a, b)
 end
 
 --r = a - b
--- bn:sub(a, b)
+-- bn.sub(a, b)
 function _M.sub(a, b)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(b))
@@ -84,7 +84,7 @@ function _M.sub(a, b)
 end
 
 --r = a * b
--- bn:mul(a, b)
+-- bn.mul(a, b)
 function _M.mul(a, p)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(p))
@@ -98,7 +98,7 @@ function _M.mul(a, p)
 end
 
 --d = a / b, r = a % b
--- bn:div(a, b)
+-- bn.div(a, b)
 function _M.div(a, b)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(b))
@@ -115,7 +115,7 @@ function _M.div(a, b)
 end
 
 -- r = a ^ p
--- bn:pow(a, p)
+-- bn.pow(a, p)
 function _M.pow(a, p)
     C.BN_dec2bn(big_list + 0, tostring(a))
     C.BN_dec2bn(big_list + 1, tostring(p))
@@ -129,7 +129,7 @@ function _M.pow(a, p)
 end
 
 -- r = a ^ 2
--- bn:sqr(a)  性能优于pow
+-- bn.sqr(a)  性能优于pow
 function _M.sqr(a)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
@@ -142,7 +142,7 @@ function _M.sqr(a)
 end
 
 --  大数十进制转十六进制
--- bn:dec2hex(a)
+-- bn.dec2hex(a)
 function _M.dec2hex(a)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
@@ -154,7 +154,7 @@ function _M.dec2hex(a)
 end
 
 --  大数十六进制转十进制
--- bn:hex2dec(a)
+-- bn.hex2dec(a)
 function _M.hex2dec(a)
     C.BN_hex2bn(big_list + 0, tostring(a))
 
@@ -166,7 +166,7 @@ function _M.hex2dec(a)
 end
 
 -- 将a中的第n位设置为1
--- bn:set_bit(a, n)
+-- bn.set_bit(a, n)
 function _M.set_bit(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
@@ -179,7 +179,7 @@ function _M.set_bit(a, n)
 end
 
 -- 将a中的第n为设置为0
--- bn:clear_bit(a, n)
+-- bn.clear_bit(a, n)
 function _M.clear_bit(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
@@ -192,7 +192,7 @@ function _M.clear_bit(a, n)
 end
 
 -- a左移n位，结果存于r
--- bn:lshift(a, n)
+-- bn.lshift(a, n)
 function _M.lshift(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
@@ -205,7 +205,7 @@ function _M.lshift(a, n)
 end
 
 --  a右移n位，结果存于r
--- bn:rshift(a, n)
+-- bn.rshift(a, n)
 function _M.rshift(a, n)
     C.BN_dec2bn(big_list + 0, tostring(a))
 
